@@ -47,10 +47,31 @@ void load_mem_jpeg(dlib::matrix<dlib::rgb_pixel>& img, const uint8_t* img_data, 
 	jpeg_read_header(&cinfo, TRUE);
 	jpeg_start_decompress(&cinfo);
 
-	if (cinfo.output_components != 3) {
-		jpeg_destroy_decompress(&cinfo);
-		throw dlib::image_load_error("jpeg_mem_loader: unsupported pixel size");
-	}
+	if (cinfo.output_components == 3) {
+        img.set_size(cinfo.output_height, cinfo.output_width);
+        while (cinfo.output_scanline < cinfo.output_height) {
+            uint8_t* buffer_array[1] = { (uint8_t*)&img(cinfo.output_scanline, 0) };
+            jpeg_read_scanlines(&cinfo, buffer_array, 1);
+        }
+    } else if (cinfo.output_components == 1) {
+        dlib::matrix<unsigned char> gray_img;
+        gray_img.set_size(cinfo.output_height, cinfo.output_width);
+        while (cinfo.output_scanline < cinfo.output_height) {
+            uint8_t* buffer_array[1] = { (uint8_t*)&gray_img(cinfo.output_scanline, 0) };
+            jpeg_read_scanlines(&cinfo, buffer_array, 1);
+        }
+
+        img.set_size(cinfo.output_height, cinfo.output_width);
+        for (long r = 0; r < img.nr(); ++r) {
+            for (long c = 0; c < img.nc(); ++c) {
+                unsigned char gray_value = gray_img(r, c);
+                img(r, c) = dlib::rgb_pixel(gray_value, gray_value, gray_value);
+            }
+        }
+    } else {
+        jpeg_destroy_decompress(&cinfo);
+        throw dlib::image_load_error("jpeg_mem_loader: unsupported pixel size");
+    }
 
 	img.set_size(cinfo.output_height, cinfo.output_width);
 	while (cinfo.output_scanline < cinfo.output_height) {
