@@ -5,11 +5,11 @@ import (
 	"log"
 	"path/filepath"
 
-	"github.com/Kagami/go-face"
+	"github.com/ad3n/go-face"
 )
 
 // Path to directory with models and test images. Here it's assumed it
-// points to the <https://github.com/Kagami/go-face-testdata> clone.
+// points to the <https://github.com/ad3n/go-face-testdata> clone.
 const dataDir = "testdata"
 
 // This example shows the basic usage of the package: create an
